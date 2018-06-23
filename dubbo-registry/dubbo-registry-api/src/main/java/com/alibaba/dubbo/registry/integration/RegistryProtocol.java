@@ -125,11 +125,14 @@ public class RegistryProtocol implements Protocol {
     }
 
     public <T> Exporter<T> export(final Invoker<T> originInvoker) throws RpcException {
+        System.out.println("--------------------registry before");
         //export invoker
         final ExporterChangeableWrapper<T> exporter = doLocalExport(originInvoker);
-
+        //orderInvoker的URL：
         URL registryUrl = getRegistryUrl(originInvoker);
-
+        //zookeeper://47.98.195.145:2181/com.alibaba.dubbo.registry.RegistryService?application=demo-provider&dubbo=2.0.0
+        // &export=dubbo://192.168.91.83:20880/com.alibaba.dubbo.demo.DemoService/anyhost?true&application=demo-provider&bind.ip=192.168.91.83&bind.port=20880&dubbo=2.0.0&generic%3Dfalse%26
+        // interface=com.alibaba.dubbo.demo.DemoService%26methods%3DsayHello%26pid%3D4216%26qos.port%3D22222%26side%3Dprovider%26timestamp%3D1529394931674&pid=4216&qos.port=22222&timestamp=1529394931613
         //registry provider
         final Registry registry = getRegistry(originInvoker);
         final URL registedProviderUrl = getRegistedProviderUrl(originInvoker);
