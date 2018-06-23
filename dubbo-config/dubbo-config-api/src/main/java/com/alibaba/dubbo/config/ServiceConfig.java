@@ -488,6 +488,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                 if (logger.isInfoEnabled()) {
                     logger.info("Export dubbo service " + interfaceClass.getName() + " to url " + url);
                 }
+                System.out.println("------------------------export berfore");
                 if (registryURLs != null && registryURLs.size() > 0) {
                     for (URL registryURL : registryURLs) {
                         url = url.addParameterIfAbsent("dynamic", registryURL.getParameter("dynamic"));
@@ -511,6 +512,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                     Exporter<?> exporter = protocol.export(wrapperInvoker);
                     exporters.add(exporter);
                 }
+                System.out.println("-----------------------export end");
             }
         }
         this.urls.add(url);
