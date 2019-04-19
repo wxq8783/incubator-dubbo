@@ -17,6 +17,7 @@
 package com.alibaba.dubbo.demo.provider;
 
 import com.alibaba.dubbo.demo.DemoService;
+import com.alibaba.dubbo.entity.Person;
 import com.alibaba.dubbo.rpc.RpcContext;
 
 import java.text.SimpleDateFormat;
@@ -30,4 +31,12 @@ public class DemoServiceImpl implements DemoService {
         return "Hello " + name + ", response from provider: " + RpcContext.getContext().getLocalAddress();
     }
 
+    @Override
+    public Person getPerson() {
+        Person person = new Person();
+        person.setName("测试");
+        person.setSex((byte) 0);
+        person.setAge(33);
+        return person;
+    }
 }

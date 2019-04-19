@@ -83,6 +83,26 @@ public class ReferenceAnnotationBeanPostProcessor extends InstantiationAwareBean
     private final ConcurrentMap<String, ReferenceBean<?>> referenceBeansCache =
             new ConcurrentHashMap<String, ReferenceBean<?>>();
 
+    /**
+     * postProcessPropertyValues()方法
+     * 完成其他定制的一些依赖注入和依赖检查等，
+     * 如AutowiredAnnotationBeanPostProcessor执行@Autowired注解注入，
+     * CommonAnnotationBeanPostProcessor执行@Resource等注解的注入，
+     * PersistenceAnnotationBeanPostProcessor执行@ PersistenceContext等JPA注解的注入，
+     * RequiredAnnotationBeanPostProcessor执行@ Required注解的检查等等。
+     *
+     * dubbo也是采用了和@Autowired注入一样的原理，
+     * 通过继承InstantiationAwareBeanPostProcessor
+     * 重写postProcessPropertyValues 方法来达到解析@Reference并实现依赖注入。
+     *
+     * 原文：https://blog.csdn.net/u012394095/article/details/83142193
+     * @param pvs
+     * @param pds
+     * @param bean
+     * @param beanName
+     * @return
+     * @throws BeanCreationException
+     */
     @Override
     public PropertyValues postProcessPropertyValues(
             PropertyValues pvs, PropertyDescriptor[] pds, Object bean, String beanName) throws BeanCreationException {

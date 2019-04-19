@@ -80,6 +80,7 @@ public abstract class AbstractRegistry implements Registry {
         // Start file save timer
         syncSaveFile = url.getParameter(Constants.REGISTRY_FILESAVE_SYNC_KEY, false);
         String filename = url.getParameter(Constants.FILE_KEY, System.getProperty("user.home") + "/.dubbo/dubbo-registry-" + url.getParameter(Constants.APPLICATION_KEY) + "-" + url.getAddress() + ".cache");
+        System.out.println("-----AbstractRegistry构造器的fileName="+filename);
         File file = null;
         if (ConfigUtils.isNotEmpty(filename)) {
             file = new File(filename);
@@ -90,6 +91,7 @@ public abstract class AbstractRegistry implements Registry {
             }
         }
         this.file = file;
+        //读取本地文件
         loadProperties();
         notify(url.getBackupUrls());
     }
@@ -370,8 +372,9 @@ public abstract class AbstractRegistry implements Registry {
             }
         }
     }
-
+    //回调通知
     protected void notify(URL url, NotifyListener listener, List<URL> urls) {
+        logger.info("--------AbstractRegistry.notify(),url=【" + url +"】,urls=【"+  urls+"】");
         if (url == null) {
             throw new IllegalArgumentException("notify url == null");
         }

@@ -39,12 +39,16 @@ public class RoundRobinLoadBalance extends AbstractLoadBalance {
 
     @Override
     protected <T> Invoker<T> doSelect(List<Invoker<T>> invokers, URL url, Invocation invocation) {
+        // 获取调用方法名
         String key = invokers.get(0).getUrl().getServiceKey() + "." + invocation.getMethodName();
         int length = invokers.size(); // Number of invokers
         int maxWeight = 0; // The maximum weight
         int minWeight = Integer.MAX_VALUE; // The minimum weight
+        //接口--权重
         final LinkedHashMap<Invoker<T>, IntegerWrapper> invokerToWeightMap = new LinkedHashMap<Invoker<T>, IntegerWrapper>();
         int weightSum = 0;
+        //获取最大权重 最小权重  权重总和
+        //存放在map中
         for (int i = 0; i < length; i++) {
             int weight = getWeight(invokers.get(i), invocation);
             maxWeight = Math.max(maxWeight, weight); // Choose the maximum weight
@@ -54,6 +58,7 @@ public class RoundRobinLoadBalance extends AbstractLoadBalance {
                 weightSum += weight;
             }
         }
+        //获取 序列号
         AtomicPositiveInteger sequence = sequences.get(key);
         if (sequence == null) {
             sequences.putIfAbsent(key, new AtomicPositiveInteger());
@@ -61,10 +66,13 @@ public class RoundRobinLoadBalance extends AbstractLoadBalance {
         }
         int currentSequence = sequence.getAndIncrement();
         if (maxWeight > 0 && minWeight < maxWeight) {
+            //取总权重的摸
             int mod = currentSequence % weightSum;
             for (int i = 0; i < maxWeight; i++) {
+                //循环所有接口 把模的值递减
                 for (Map.Entry<Invoker<T>, IntegerWrapper> each : invokerToWeightMap.entrySet()) {
                     final Invoker<T> k = each.getKey();
+                    //权重的值
                     final IntegerWrapper v = each.getValue();
                     if (mod == 0 && v.getValue() > 0) {
                         return k;

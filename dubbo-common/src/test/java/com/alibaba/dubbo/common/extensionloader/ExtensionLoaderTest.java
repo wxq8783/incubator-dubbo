@@ -128,19 +128,21 @@ public class ExtensionLoaderTest {
     @Test
     public void test_getExtension_WithWrapper() throws Exception {
         WrappedExt impl1 = ExtensionLoader.getExtensionLoader(WrappedExt.class).getExtension("impl1");
-        assertThat(impl1, anyOf(instanceOf(Ext5Wrapper1.class), instanceOf(Ext5Wrapper2.class)));
+        //assertThat(impl1, anyOf(instanceOf(Ext5Wrapper1.class), instanceOf(Ext5Wrapper2.class)));
+//        WrappedExt impl2 = ExtensionLoader.getExtensionLoader(WrappedExt.class).getExtension("impl2");
+        //assertThat(impl2, anyOf(instanceOf(Ext5Wrapper1.class), instanceOf(Ext5Wrapper2.class)));
 
-        WrappedExt impl2 = ExtensionLoader.getExtensionLoader(WrappedExt.class).getExtension("impl2");
-        assertThat(impl2, anyOf(instanceOf(Ext5Wrapper1.class), instanceOf(Ext5Wrapper2.class)));
-
-
+        System.out.println("------------执行方法前");
         URL url = new URL("p1", "1.2.3.4", 1010, "path1");
-        int echoCount1 = Ext5Wrapper1.echoCount.get();
-        int echoCount2 = Ext5Wrapper2.echoCount.get();
-
-        assertEquals("Ext5Impl1-echo", impl1.echo(url, "ha"));
-        assertEquals(echoCount1 + 1, Ext5Wrapper1.echoCount.get());
-        assertEquals(echoCount2 + 1, Ext5Wrapper2.echoCount.get());
+//        int echoCount1 = Ext5Wrapper1.echoCount.get();
+//        int echoCount2 = Ext5Wrapper2.echoCount.get();
+        String ss = impl1.echo(url, "ha") ;
+        System.out.println("------------返回结果："+ss);
+//        Integer yyy = Ext5Wrapper1.echoCount.get();
+//        System.out.println("++++++++++++返回的结果："+yyy);
+//        assertEquals("Ext5Impl1-echo", impl1.echo(url, "ha"));
+//        assertEquals(echoCount1 + 1, Ext5Wrapper1.echoCount.get());
+//        assertEquals(echoCount2 + 1, Ext5Wrapper2.echoCount.get());
     }
 
     @Test
@@ -363,24 +365,46 @@ public class ExtensionLoaderTest {
         }
     }
 
+    /**
+     Spring的AOP增强方式一共有5种,分别为
+
+     增强类型	应用场景:
+     前置增强	权限控制、记录调用日志
+     后置增强	统计分析结果数据
+     异常增强	通过日志记录方法异常信息
+     最终增强	释放资源
+     环绕增强	缓存、性能、权限、事务管理
+
+     //环绕
+     try {
+        //前置
+        System.out.println("=====");
+        //后置
+     }catch (Exception e){
+        //异常
+     }finally {
+        //最终
+     }
+     */
     @Test
     public void testLoadActivateExtension() throws Exception {
         // test default
         URL url = URL.valueOf("test://localhost/test");
-        List<ActivateExt1> list = ExtensionLoader.getExtensionLoader(ActivateExt1.class)
-                .getActivateExtension(url, new String[]{}, "default_group");
-        Assert.assertEquals(1, list.size());
-        Assert.assertTrue(list.get(0).getClass() == ActivateExt1Impl1.class);
+        List<ActivateExt1> list = null ;
+//       list = ExtensionLoader.getExtensionLoader(ActivateExt1.class)
+//                .getActivateExtension(url, new String[]{}, "default_group");
+//        Assert.assertEquals(1, list.size());
+//        Assert.assertTrue(list.get(0).getClass() == ActivateExt1Impl1.class);
 
         // test group
-        url = url.addParameter(Constants.GROUP_KEY, "group1");
-        list = ExtensionLoader.getExtensionLoader(ActivateExt1.class)
-                .getActivateExtension(url, new String[]{}, "group1");
-        Assert.assertEquals(1, list.size());
-        Assert.assertTrue(list.get(0).getClass() == GroupActivateExtImpl.class);
-
-        // test value
-        url = url.removeParameter(Constants.GROUP_KEY);
+//        url = url.addParameter(Constants.GROUP_KEY, "group1");
+//        list = ExtensionLoader.getExtensionLoader(ActivateExt1.class)
+//                .getActivateExtension(url, new String[]{}, "group1");
+//        Assert.assertEquals(1, list.size());
+//        Assert.assertTrue(list.get(0).getClass() == GroupActivateExtImpl.class);
+//
+//        // test value
+//        url = url.removeParameter(Constants.GROUP_KEY);
         url = url.addParameter(Constants.GROUP_KEY, "value");
         url = url.addParameter("value", "value");
         list = ExtensionLoader.getExtensionLoader(ActivateExt1.class)

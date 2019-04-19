@@ -23,10 +23,12 @@
 
     <!-- provider's application name, used for tracing dependency relationship -->
     <dubbo:application name="demo-provider"/>
+    <dubbo:registry address="zookeeper://47.98.195.145:2181"/>
+    <!-- use multicast registry center to export service
 
-    <!-- use multicast registry center to export service -->
-    <dubbo:registry address="multicast://224.5.6.7:1234"/>
 
+    <dubbo:registry address="nacos://192.168.94.17:8848"/>
+-->
     <!-- use dubbo protocol to export service on port 20880 -->
     <dubbo:protocol name="dubbo" port="20880"/>
 

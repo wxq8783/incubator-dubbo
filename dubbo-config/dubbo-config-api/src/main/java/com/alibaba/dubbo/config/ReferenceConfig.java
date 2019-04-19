@@ -108,6 +108,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
     };
 
     public ReferenceConfig() {
+        System.out.println("----------------------");
     }
 
     public ReferenceConfig(Reference reference) {
@@ -186,6 +187,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
         if (initialized) {
             return;
         }
+        System.out.println("-----------------------------");
         initialized = true;
         if (interfaceName == null || interfaceName.length() == 0) {
             throw new IllegalStateException("<dubbo:reference interface=\"\" /> interface not allow null!");

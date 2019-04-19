@@ -16,8 +16,11 @@
  */
 package com.alibaba.dubbo.demo;
 
+import com.alibaba.dubbo.entity.Person;
+
 public interface DemoService {
 
     String sayHello(String name);
 
+    Person getPerson();
 }

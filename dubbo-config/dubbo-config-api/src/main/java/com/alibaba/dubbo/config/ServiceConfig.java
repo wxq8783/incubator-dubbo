@@ -306,6 +306,12 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                 throw new IllegalStateException("The stub implementation class " + stubClass.getName() + " not implement interface " + interfaceName);
             }
         }
+        //校验ServiceBean的application、registry、protocol是否为空，并从系统属性（优先）、资源文件中填充其属性。
+        //系统属性、资源文件属性的配置如下：、
+        //application dubbo.application.属性名，例如 dubbo.application.name
+        //registry dubbo.registry.属性名，例如 dubbo.registry.address
+        //protocol dubbo.protocol.属性名，例如 dubbo.protocol.port
+        //service dubbo.service.属性名，例如 dubbo.service.stub
         checkApplication();
         checkRegistry();
         checkProtocol();
@@ -315,6 +321,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
             path = interfaceName;
         }
         doExportUrls();
+        //将服务提供者信息注册到ApplicationModel实例中。
         ProviderModel providerModel = new ProviderModel(getUniqueServiceName(), this, ref);
         ApplicationModel.initProviderModel(getUniqueServiceName(), providerModel);
     }
@@ -354,6 +361,8 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
     @SuppressWarnings({"unchecked", "rawtypes"})
     private void doExportUrls() {
         List<URL> registryURLs = loadRegistries(true);
+        //registry://47.98.195.145:2181/com.alibaba.dubbo.registry.RegistryService?
+        // application=demo-provider&dubbo=2.0.2&pid=6356&qos.port=22222&registry=zookeeper&timestamp=1537519567467
         for (ProtocolConfig protocolConfig : protocols) {
             doExportUrlsFor1Protocol(protocolConfig, registryURLs);
         }
@@ -431,8 +440,10 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                     }
                 }
             } // end of methods for
+            //如果dubbo:service有dubbo:method子标签，则dubbo:method以及其子标签的配置属性，都存入到Map中，
+            // 属性名称加上对应的方法名作为前缀。dubbo:method的子标签dubbo:argument,其键为方法名.参数序号。
         }
-
+        //添加methods键值对，存放dubbo:service的所有方法名，多个方法名用,隔开，如果是泛化实现，填充genric=true,methods为”*”；
         if (ProtocolUtils.isGeneric(generic)) {
             map.put(Constants.GENERIC_KEY, generic);
             map.put(Constants.METHODS_KEY, Constants.ANY_VALUE);
@@ -470,7 +481,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
         String host = this.findConfigedHosts(protocolConfig, registryURLs, map);
         Integer port = this.findConfigedPorts(protocolConfig, name, map);
         URL url = new URL(name, host, port, (contextPath == null || contextPath.length() == 0 ? "" : contextPath + "/") + path, map);
-
+//dubbo://192.168.95.250:20880/com.alibaba.dubbo.demo.DemoService?anyhost=true&application=demo-provider&bind.ip=192.168.95.250&bind.port=20880&dubbo=2.0.2&generic=false&interface=com.alibaba.dubbo.demo.DemoService&methods=sayHello&pid=10104&qos.port=22222&side=provider&timestamp=1537865917456
         if (ExtensionLoader.getExtensionLoader(ConfiguratorFactory.class)
                 .hasExtension(url.getProtocol())) {
             url = ExtensionLoader.getExtensionLoader(ConfiguratorFactory.class)
@@ -483,6 +494,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
 
             // export to local if the config is not remote (export to remote only when config is remote)
             if (!Constants.SCOPE_REMOTE.toString().equalsIgnoreCase(scope)) {
+                //接口暴露逻辑
                 exportLocal(url);
             }
             // export to remote if the config is not local (export to local only when config is local)
@@ -500,7 +512,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                         if (logger.isInfoEnabled()) {
                             logger.info("Register dubbo service " + interfaceClass.getName() + " url " + url + " to registry " + registryURL);
                         }
-
+                        //Register dubbo service com.alibaba.dubbo.demo.DemoService url dubbo://192.168.95.250:20880/com.alibaba.dubbo.demo.DemoService?anyhost=true&application=demo-provider&bind.ip=192.168.95.250&bind.port=20880&dubbo=2.0.2&generic=false&interface=com.alibaba.dubbo.demo.DemoService&methods=sayHello&pid=10104&qos.port=22222&side=provider&timestamp=1537865917456 to registry registry://47.98.195.145:2181/com.alibaba.dubbo.registry.RegistryService?application=demo-provider&dubbo=2.0.2&pid=10104&qos.port=22222&registry=zookeeper&timestamp=1537865846689
                         // For providers, this is used to enable custom proxy to generate invoker
                         String proxy = url.getParameter(Constants.PROXY_KEY);
                         if (StringUtils.isNotEmpty(proxy)) {

@@ -22,12 +22,9 @@ import com.alibaba.dubbo.common.utils.ConcurrentHashSet;
 import com.alibaba.dubbo.common.utils.ExecutorUtil;
 import com.alibaba.dubbo.common.utils.NamedThreadFactory;
 import com.alibaba.dubbo.registry.NotifyListener;
+import com.cedarsoftware.util.DateUtilities;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executors;
@@ -64,6 +61,7 @@ public abstract class FailbackRegistry extends AbstractRegistry {
     private final int retryPeriod;
 
     public FailbackRegistry(URL url) {
+        //缓存本地  notify回调通知
         super(url);
         this.retryPeriod = url.getParameter(Constants.REGISTRY_RETRY_PERIOD_KEY, Constants.DEFAULT_REGISTRY_RETRY_PERIOD);
         this.retryFuture = retryExecutor.scheduleWithFixedDelay(new Runnable() {
@@ -309,6 +307,7 @@ public abstract class FailbackRegistry extends AbstractRegistry {
 
     // Retry the failed actions
     protected void retry() {
+        //logger.info("-------------FailbackRegistry.retry(),时间是："+System.currentTimeMillis());
         if (!failedRegistered.isEmpty()) {
             Set<URL> failed = new HashSet<URL>(failedRegistered);
             if (failed.size() > 0) {
@@ -318,6 +317,7 @@ public abstract class FailbackRegistry extends AbstractRegistry {
                 try {
                     for (URL url : failed) {
                         try {
+                            //注册到zookeeper
                             doRegister(url);
                             failedRegistered.remove(url);
                         } catch (Throwable t) { // Ignore all the exceptions and wait for the next retry
@@ -338,6 +338,7 @@ public abstract class FailbackRegistry extends AbstractRegistry {
                 try {
                     for (URL url : failed) {
                         try {
+                            //取消注册的url
                             doUnregister(url);
                             failedUnregistered.remove(url);
                         } catch (Throwable t) { // Ignore all the exceptions and wait for the next retry
