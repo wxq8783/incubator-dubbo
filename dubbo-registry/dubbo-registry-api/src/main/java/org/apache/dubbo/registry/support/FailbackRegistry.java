@@ -226,6 +226,10 @@ public abstract class FailbackRegistry extends AbstractRegistry {
         return failedNotified;
     }
 
+    /**
+     * 创建节点
+     * @param url
+     */
     @Override
     public void register(URL url) {
         super.register(url);
@@ -347,7 +351,7 @@ public abstract class FailbackRegistry extends AbstractRegistry {
             addFailedUnsubscribed(url, listener);
         }
     }
-
+    //收到订阅后处理
     @Override
     protected void notify(URL url, NotifyListener listener, List<URL> urls) {
         if (url == null) {

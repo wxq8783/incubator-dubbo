@@ -42,7 +42,7 @@ public class SpringExtensionFactory implements ExtensionFactory {
 
     private static final Set<ApplicationContext> CONTEXTS = new ConcurrentHashSet<ApplicationContext>();
     private static final ApplicationListener SHUTDOWN_HOOK_LISTENER = new ShutdownHookListener();
-
+    //添加的时候 在referenceBean和ServiceBean
     public static void addApplicationContext(ApplicationContext context) {
         CONTEXTS.add(context);
         if (context instanceof ConfigurableApplicationContext) {
@@ -73,7 +73,7 @@ public class SpringExtensionFactory implements ExtensionFactory {
         if (type.isInterface() && type.isAnnotationPresent(SPI.class)) {
             return null;
         }
-
+        //遍历所有spring上下文 先根据名字从spring容器中查找
         for (ApplicationContext context : CONTEXTS) {
             if (context.containsBean(name)) {
                 Object bean = context.getBean(name);
@@ -88,7 +88,7 @@ public class SpringExtensionFactory implements ExtensionFactory {
         if (Object.class == type) {
             return null;
         }
-
+        //如果名字没有找到 则直接通过类型 查找
         for (ApplicationContext context : CONTEXTS) {
             try {
                 return context.getBean(type);

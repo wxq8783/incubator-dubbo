@@ -90,7 +90,7 @@ public abstract class AbstractRegistry implements Registry {
 
     public AbstractRegistry(URL url) {
         setUrl(url);
-        // Start file save timer
+        // Start file save timer 启动文件定时保存器
         syncSaveFile = url.getParameter(REGISTRY_FILESAVE_SYNC_KEY, false);
         String filename = url.getParameter(FILE_KEY, System.getProperty("user.home") + "/.dubbo/dubbo-registry-" + url.getParameter(APPLICATION_KEY) + "-" + url.getAddress() + ".cache");
         File file = null;
@@ -105,6 +105,7 @@ public abstract class AbstractRegistry implements Registry {
         this.file = file;
         // When starting the subscription center,
         // we need to read the local cache file for future Registry fault tolerance processing.
+        //把文件中的内容加载为properties
         loadProperties();
         notify(url.getBackupUrls());
     }

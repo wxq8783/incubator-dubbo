@@ -70,6 +70,13 @@ public class DecodeableRpcResult extends AppResponse implements Codec, Decodeabl
         throw new UnsupportedOperationException();
     }
 
+    /**
+     * 读取服务端响应报文
+     * @param channel channel.
+     * @param input   input stream.
+     * @return
+     * @throws IOException
+     */
     @Override
     public Object decode(Channel channel, InputStream input) throws IOException {
         ObjectInput in = CodecSupport.getSerialization(channel.getUrl(), serializationType)
@@ -77,7 +84,7 @@ public class DecodeableRpcResult extends AppResponse implements Codec, Decodeabl
 
         byte flag = in.readByte();
         switch (flag) {
-            case DubboCodec.RESPONSE_NULL_VALUE:
+            case DubboCodec.RESPONSE_NULL_VALUE://返回结果标记为NULL值
                 break;
             case DubboCodec.RESPONSE_VALUE:
                 handleValue(in);
@@ -124,14 +131,14 @@ public class DecodeableRpcResult extends AppResponse implements Codec, Decodeabl
 
     private void handleValue(ObjectInput in) throws IOException {
         try {
-            Type[] returnTypes = RpcUtils.getReturnTypes(invocation);
+            Type[] returnTypes = RpcUtils.getReturnTypes(invocation);//读取方法调用返回值类型
             Object value = null;
             if (ArrayUtils.isEmpty(returnTypes)) {
                 value = in.readObject();
             } else if (returnTypes.length == 1) {
                 value = in.readObject((Class<?>) returnTypes[0]);
             } else {
-                value = in.readObject((Class<?>) returnTypes[0], returnTypes[1]);
+                value = in.readObject((Class<?>) returnTypes[0], returnTypes[1]);//如果返回值包含泛型，则调用反序列解析接口
             }
             setValue(value);
         } catch (ClassNotFoundException e) {
@@ -145,7 +152,7 @@ public class DecodeableRpcResult extends AppResponse implements Codec, Decodeabl
             if (!(obj instanceof Throwable)) {
                 throw new IOException("Response data error, expect Throwable, but get " + obj);
             }
-            setException((Throwable) obj);
+            setException((Throwable) obj);//保存读取的返回值异常结果
         } catch (ClassNotFoundException e) {
             rethrow(e);
         }
@@ -153,7 +160,7 @@ public class DecodeableRpcResult extends AppResponse implements Codec, Decodeabl
 
     private void handleAttachment(ObjectInput in) throws IOException {
         try {
-            setAttachments((Map<String, String>) in.readObject(Map.class));
+            setAttachments((Map<String, String>) in.readObject(Map.class));//读取返回值为null,并且有隐式参数的
         } catch (ClassNotFoundException e) {
             rethrow(e);
         }

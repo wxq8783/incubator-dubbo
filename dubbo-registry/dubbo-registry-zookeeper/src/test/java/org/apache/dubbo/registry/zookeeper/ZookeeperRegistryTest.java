@@ -57,7 +57,7 @@ public class ZookeeperRegistryTest {
         this.zkServer = new TestingServer(zkServerPort, true);
         this.zkServer.start();
 
-        this.registryUrl = URL.valueOf("zookeeper://localhost:" + zkServerPort);
+        this.registryUrl = URL.valueOf("zookeeper://127.0.0.1:" + zkServerPort);
         zookeeperRegistryFactory = new ZookeeperRegistryFactory();
         zookeeperRegistryFactory.setZookeeperTransporter(new CuratorZookeeperTransporter());
         this.zookeeperRegistry = (ZookeeperRegistry) zookeeperRegistryFactory.createRegistry(registryUrl);

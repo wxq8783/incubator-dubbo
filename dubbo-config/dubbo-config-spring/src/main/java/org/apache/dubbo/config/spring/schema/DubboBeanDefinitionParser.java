@@ -72,14 +72,17 @@ public class DubboBeanDefinitionParser implements BeanDefinitionParser {
 
     @SuppressWarnings("unchecked")
     private static BeanDefinition parse(Element element, ParserContext parserContext, Class<?> beanClass, boolean required) {
+        //生成Spring的Bean定义  指定beanClass给Spring反射创建实例 比如ServiceBean
         RootBeanDefinition beanDefinition = new RootBeanDefinition();
         beanDefinition.setBeanClass(beanClass);
         beanDefinition.setLazyInit(false);
         String id = element.getAttribute("id");
+        //Spring容器没有重复的Bean定义
         if (StringUtils.isEmpty(id) && required) {
+            //依次获取xml配置标签name和interface作为Bean唯一id
             String generatedBeanName = element.getAttribute("name");
             if (StringUtils.isEmpty(generatedBeanName)) {
-                if (ProtocolConfig.class.equals(beanClass)) {
+                if (ProtocolConfig.class.equals(beanClass)) {//如果协议标签没有指定协议 则默认dubbo
                     generatedBeanName = "dubbo";
                 } else {
                     generatedBeanName = element.getAttribute("interface");
@@ -90,6 +93,7 @@ public class DubboBeanDefinitionParser implements BeanDefinitionParser {
             }
             id = generatedBeanName;
             int counter = 2;
+            //检查 重复Bean,如果有则生成唯一id
             while (parserContext.getRegistry().containsBeanDefinition(id)) {
                 id = generatedBeanName + (counter++);
             }
@@ -98,9 +102,11 @@ public class DubboBeanDefinitionParser implements BeanDefinitionParser {
             if (parserContext.getRegistry().containsBeanDefinition(id)) {
                 throw new IllegalStateException("Duplicate spring bean id " + id);
             }
+            //每次解析会向Spring注册新的BeanDefinition 后续会追加属性
             parserContext.getRegistry().registerBeanDefinition(id, beanDefinition);
             beanDefinition.getPropertyValues().addPropertyValue("id", id);
         }
+        /**************前面逻辑主要负责把标签解析成对应的Bean定义并注册到Spring上下文中*****************************/
         if (ProtocolConfig.class.equals(beanClass)) {
             for (String name : parserContext.getRegistry().getBeanDefinitionNames()) {
                 BeanDefinition definition = parserContext.getRegistry().getBeanDefinition(name);
@@ -113,6 +119,7 @@ public class DubboBeanDefinitionParser implements BeanDefinitionParser {
                 }
             }
         } else if (ServiceBean.class.equals(beanClass)) {
+            //如果<dubbo:service>配置了class属性，那么具体class配置的类注册Bean,并注入ref属性
             String className = element.getAttribute("class");
             if (className != null && className.length() > 0) {
                 RootBeanDefinition classDefinition = new RootBeanDefinition();

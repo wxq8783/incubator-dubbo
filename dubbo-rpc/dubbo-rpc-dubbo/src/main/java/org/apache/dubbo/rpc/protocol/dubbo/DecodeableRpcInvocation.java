@@ -93,18 +93,18 @@ public class DecodeableRpcInvocation extends RpcInvocation implements Codec, Dec
         ObjectInput in = CodecSupport.getSerialization(channel.getUrl(), serializationType)
                 .deserialize(channel.getUrl(), input);
 
-        String dubboVersion = in.readUTF();
+        String dubboVersion = in.readUTF();//读取框架版本
         request.setVersion(dubboVersion);
         setAttachment(DUBBO_VERSION_KEY, dubboVersion);
 
-        setAttachment(PATH_KEY, in.readUTF());
-        setAttachment(VERSION_KEY, in.readUTF());
+        setAttachment(PATH_KEY, in.readUTF());//读取调用接口
+        setAttachment(VERSION_KEY, in.readUTF());//读取接口指定的版本 默认0.0.0
 
-        setMethodName(in.readUTF());
+        setMethodName(in.readUTF());//读取方法名
         try {
             Object[] args;
             Class<?>[] pts;
-            String desc = in.readUTF();
+            String desc = in.readUTF();//读取方法参数类型
             if (desc.length() == 0) {
                 pts = DubboCodec.EMPTY_CLASS_ARRAY;
                 args = DubboCodec.EMPTY_OBJECT_ARRAY;
@@ -113,7 +113,7 @@ public class DecodeableRpcInvocation extends RpcInvocation implements Codec, Dec
                 args = new Object[pts.length];
                 for (int i = 0; i < args.length; i++) {
                     try {
-                        args[i] = in.readObject(pts[i]);
+                        args[i] = in.readObject(pts[i]);//依次读取方法参数值
                     } catch (Exception e) {
                         if (log.isWarnEnabled()) {
                             log.warn("Decode argument failed: " + e.getMessage(), e);
@@ -123,7 +123,7 @@ public class DecodeableRpcInvocation extends RpcInvocation implements Codec, Dec
             }
             setParameterTypes(pts);
 
-            Map<String, String> map = (Map<String, String>) in.readObject(Map.class);
+            Map<String, String> map = (Map<String, String>) in.readObject(Map.class);//读取 隐式参数
             if (map != null && map.size() > 0) {
                 Map<String, String> attachment = getAttachments();
                 if (attachment == null) {
@@ -133,7 +133,7 @@ public class DecodeableRpcInvocation extends RpcInvocation implements Codec, Dec
                 setAttachments(attachment);
             }
             //decode argument ,may be callback
-            for (int i = 0; i < args.length; i++) {
+            for (int i = 0; i < args.length; i++) {//处理异步参数回调 如果有则在服务端创建reference代理实例
                 args[i] = decodeInvocationArgument(channel, this, pts, i, args[i]);
             }
 

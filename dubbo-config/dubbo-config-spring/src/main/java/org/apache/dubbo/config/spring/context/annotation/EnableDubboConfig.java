@@ -56,7 +56,7 @@ import java.lang.annotation.Target;
  * <li>{@link ProviderConfig} binding to property :  "dubbo.providers"</li>
  * <li>{@link ConsumerConfig} binding to property :  "dubbo.consumers"</li>
  * </ul>
- *
+ * 配置注解
  * @see EnableDubboConfigBinding
  * @see DubboConfigConfiguration
  * @see DubboConfigConfigurationRegistrar

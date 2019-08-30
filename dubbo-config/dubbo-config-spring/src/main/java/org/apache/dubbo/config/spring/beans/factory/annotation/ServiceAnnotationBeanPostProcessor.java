@@ -106,10 +106,11 @@ public class ServiceAnnotationBeanPostProcessor implements BeanDefinitionRegistr
 
     @Override
     public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry) throws BeansException {
-
+        //获取用户配置注解的扫描包
         Set<String> resolvedPackagesToScan = resolvePackagesToScan(packagesToScan);
 
         if (!CollectionUtils.isEmpty(resolvedPackagesToScan)) {
+            //触发ServiceBean定义和注入
             registerServiceBeans(resolvedPackagesToScan, registry);
         } else {
             if (logger.isWarnEnabled()) {
@@ -134,11 +135,11 @@ public class ServiceAnnotationBeanPostProcessor implements BeanDefinitionRegistr
         BeanNameGenerator beanNameGenerator = resolveBeanNameGenerator(registry);
 
         scanner.setBeanNameGenerator(beanNameGenerator);
-
+        //指定扫描到dubbo的@Service注解
         scanner.addIncludeFilter(new AnnotationTypeFilter(Service.class));
 
         /**
-         * Add the compatibility for legacy Dubbo's @Service
+         * Add the compatibility(并容  兼容) for legacy(遗产 遗留) Dubbo's @Service
          *
          * The issue : https://github.com/apache/dubbo/issues/4330
          * @since 2.7.3
@@ -147,16 +148,18 @@ public class ServiceAnnotationBeanPostProcessor implements BeanDefinitionRegistr
 
         for (String packageToScan : packagesToScan) {
 
-            // Registers @Service Bean first
+            // Registers @Service Bean first 将@Service作为不同的bean注入容器
             scanner.scan(packageToScan);
 
             // Finds all BeanDefinitionHolders of @Service whether @ComponentScan scans or not.
+            //对扫描的服务创建BeanDefinitionHolder 用于生成ServiceBean定义
             Set<BeanDefinitionHolder> beanDefinitionHolders =
                     findServiceBeanDefinitionHolders(scanner, packageToScan, registry, beanNameGenerator);
 
             if (!CollectionUtils.isEmpty(beanDefinitionHolders)) {
 
                 for (BeanDefinitionHolder beanDefinitionHolder : beanDefinitionHolders) {
+                    //注册ServiceBean定义 并做数据绑定和解析
                     registerServiceBean(beanDefinitionHolder, registry, scanner);
                 }
 

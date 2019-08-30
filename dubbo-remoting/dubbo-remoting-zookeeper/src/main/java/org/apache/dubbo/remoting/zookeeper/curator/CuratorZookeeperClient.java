@@ -72,6 +72,7 @@ public class CuratorZookeeperClient extends AbstractZookeeperClient<CuratorZooke
                 builder = builder.authorization("digest", authority.getBytes());
             }
             client = builder.build();
+            //断开重连
             client.getConnectionStateListenable().addListener(new ConnectionStateListener() {
                 @Override
                 public void stateChanged(CuratorFramework client, ConnectionState state) {
@@ -205,10 +206,11 @@ public class CuratorZookeeperClient extends AbstractZookeeperClient<CuratorZooke
     public CuratorZookeeperClient.CuratorWatcherImpl createTargetChildListener(String path, ChildListener listener) {
         return new CuratorZookeeperClient.CuratorWatcherImpl(client, listener);
     }
-
+    //加入监听
     @Override
     public List<String> addTargetChildListener(String path, CuratorWatcherImpl listener) {
         try {
+            //启动加入订阅
             return client.getChildren().usingWatcher(listener).forPath(path);
         } catch (NoNodeException e) {
             return null;
@@ -281,7 +283,7 @@ public class CuratorZookeeperClient extends AbstractZookeeperClient<CuratorZooke
         public void unwatch() {
             this.childListener = null;
         }
-
+        //收到订阅后的处理 ？？？
         @Override
         public void process(WatchedEvent event) throws Exception {
             if (childListener != null) {

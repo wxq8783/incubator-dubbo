@@ -351,7 +351,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
     private T createProxy(Map<String, String> map) {
         if (shouldJvmRefer(map)) {
             URL url = new URL(LOCAL_PROTOCOL, LOCALHOST_VALUE, 0, interfaceClass.getName()).addParameters(map);
-            invoker = REF_PROTOCOL.refer(interfaceClass, url);
+            invoker = REF_PROTOCOL.refer(interfaceClass, url);//直接使用injvm协议从内存中获取实例
             if (logger.isInfoEnabled()) {
                 logger.info("Using injvm service " + interfaceClass.getName());
             }
@@ -366,6 +366,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
                             url = url.setPath(interfaceName);
                         }
                         if (REGISTRY_PROTOCOL.equals(url.getProtocol())) {
+                            //注册中心地址后添加refer存储服务消费元数据
                             urls.add(url.addParameterAndEncoded(REFER_KEY, StringUtils.toQueryString(map)));
                         } else {
                             urls.add(ClusterUtils.mergeUrl(url, map));
@@ -392,12 +393,13 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
                 }
             }
 
-            if (urls.size() == 1) {
+            if (urls.size() == 1) {//单注册中心消费
                 invoker = REF_PROTOCOL.refer(interfaceClass, urls.get(0));
             } else {
                 List<Invoker<?>> invokers = new ArrayList<Invoker<?>>();
                 URL registryURL = null;
                 for (URL url : urls) {
+                    //逐个获取注册中心的服务，并添加到invokers列表
                     invokers.add(REF_PROTOCOL.refer(interfaceClass, url));
                     if (REGISTRY_PROTOCOL.equals(url.getProtocol())) {
                         registryURL = url; // use last registry url
@@ -407,6 +409,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
                     // use RegistryAwareCluster only when register's CLUSTER is available
                     URL u = registryURL.addParameter(CLUSTER_KEY, RegistryAwareCluster.NAME);
                     // The invoker wrap relation would be: RegistryAwareClusterInvoker(StaticDirectory) -> FailoverClusterInvoker(RegistryDirectory, will execute route) -> Invoker
+                    //通过Cluster将多个Invoker转换成一个Invoker
                     invoker = CLUSTER.join(new StaticDirectory(u, invokers));
                 } else { // not a registry url, must be direct invoke.
                     invoker = CLUSTER.join(new StaticDirectory(invokers));
@@ -429,8 +432,10 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
             URL consumerURL = new URL(CONSUMER_PROTOCOL, map.remove(REGISTER_IP_KEY), 0, map.get(INTERFACE_KEY), map);
             metadataReportService.publishConsumer(consumerURL);
         }
-        // create service proxy
-        return (T) PROXY_FACTORY.getProxy(invoker);
+        // create service proxy 把invoker转换成接口代理
+        //最终代理接口都会创建InvokerInvocationHandler，这个类实现了JDK的InvocationHandler接口
+        //所以服务暴露的Dubbo接口都会委托给代理去发起远程调用
+         return (T) PROXY_FACTORY.getProxy(invoker);
     }
 
     /**

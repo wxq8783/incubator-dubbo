@@ -141,9 +141,10 @@ public abstract class AnnotationInjectedBeanPostProcessor extends
     @Override
     public PropertyValues postProcessPropertyValues(
             PropertyValues pvs, PropertyDescriptor[] pds, Object bean, String beanName) throws BeanCreationException {
-
+        //查找Bean所以标注了@Reference的字段和方法
         InjectionMetadata metadata = findInjectionMetadata(beanName, bean.getClass(), pvs);
         try {
+            //对字段和方法进行反射绑定
             metadata.inject(bean, beanName, pvs);
         } catch (BeanCreationException ex) {
             throw ex;

@@ -98,11 +98,26 @@ final class HeaderExchangeChannel implements ExchangeChannel {
         }
     }
 
+    /**
+     * 处理发送请求数据
+     * @param request
+     * @return
+     * @throws RemotingException
+     */
     @Override
     public CompletableFuture<Object> request(Object request) throws RemotingException {
         return request(request, channel.getUrl().getPositiveParameter(TIMEOUT_KEY, DEFAULT_TIMEOUT));
     }
 
+    /**
+     * 1、每个请求都会有序列号,依次递增;  INVOKE_ID.getAndIncrement();
+     * 2、设置为双向通信,即 twoWay=true, 既发送也接收请求;
+     * 3、使用 DefaultFuture 封装返回值,接收异步结果;
+     * @param request
+     * @param timeout
+     * @return
+     * @throws RemotingException
+     */
     @Override
     public CompletableFuture<Object> request(Object request, int timeout) throws RemotingException {
         if (closed) {
@@ -115,6 +130,7 @@ final class HeaderExchangeChannel implements ExchangeChannel {
         req.setData(request);
         DefaultFuture future = DefaultFuture.newFuture(channel, req, timeout);
         try {
+            //AbstractPeer.send()
             channel.send(req);
         } catch (RemotingException e) {
             future.cancel();

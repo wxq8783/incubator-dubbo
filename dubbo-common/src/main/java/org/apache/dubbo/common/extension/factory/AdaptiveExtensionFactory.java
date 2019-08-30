@@ -35,14 +35,17 @@ public class AdaptiveExtensionFactory implements ExtensionFactory {
     public AdaptiveExtensionFactory() {
         ExtensionLoader<ExtensionFactory> loader = ExtensionLoader.getExtensionLoader(ExtensionFactory.class);
         List<ExtensionFactory> list = new ArrayList<ExtensionFactory>();
+        //loader.getSupportedExtensions() TreeSet进行排序  SPIExtensionFactory排在前面 SpringExtensionFactory排在后面
         for (String name : loader.getSupportedExtensions()) {
             list.add(loader.getExtension(name));
         }
+
         factories = Collections.unmodifiableList(list);
     }
 
     @Override
     public <T> T getExtension(Class<T> type, String name) {
+        //遍历所有ExtensionFactory
         for (ExtensionFactory factory : factories) {
             T extension = factory.getExtension(type, name);
             if (extension != null) {

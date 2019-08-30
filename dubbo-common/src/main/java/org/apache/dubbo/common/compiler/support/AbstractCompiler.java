@@ -49,6 +49,7 @@ public abstract class AbstractCompiler implements Compiler {
         }
         String className = pkg != null && pkg.length() > 0 ? pkg + "." + cls : cls;
         try {
+            //防止 重复编译
             return Class.forName(className, true, org.apache.dubbo.common.utils.ClassUtils.getCallerClassLoader(getClass()));
         } catch (ClassNotFoundException e) {
             if (!code.endsWith("}")) {

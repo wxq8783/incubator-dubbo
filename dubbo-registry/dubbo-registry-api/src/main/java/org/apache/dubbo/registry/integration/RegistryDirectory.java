@@ -277,6 +277,7 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
             if (invokerUrls.isEmpty()) {
                 return;
             }
+            //完成Invoker转换
             Map<String, Invoker<T>> newUrlInvokerMap = toInvokers(invokerUrls);// Translate url list to Invoker map
 
             /**
@@ -382,6 +383,7 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
                 boolean accept = false;
                 String[] acceptProtocols = queryProtocols.split(",");
                 for (String acceptProtocol : acceptProtocols) {
+                    //根据消费方Protocol配置过滤不匹配协议
                     if (providerUrl.getProtocol().equals(acceptProtocol)) {
                         accept = true;
                         break;
@@ -401,10 +403,11 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
                         ExtensionLoader.getExtensionLoader(Protocol.class).getSupportedExtensions()));
                 continue;
             }
+            //合并provider端配置数据 比如服务端IP和port
             URL url = mergeUrl(providerUrl);
 
             String key = url.toFullString(); // The parameter urls are sorted
-            if (keys.contains(key)) { // Repeated url
+            if (keys.contains(key)) { // Repeated url 忽略重复推送的访问列表
                 continue;
             }
             keys.add(key);
@@ -420,6 +423,7 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
                         enabled = url.getParameter(ENABLED_KEY, true);
                     }
                     if (enabled) {
+                        //TODO 使用具体协议 创建远程链接
                         invoker = new InvokerDelegate<>(protocol.refer(serviceType, url), url, providerUrl);
                     }
                 } catch (Throwable t) {

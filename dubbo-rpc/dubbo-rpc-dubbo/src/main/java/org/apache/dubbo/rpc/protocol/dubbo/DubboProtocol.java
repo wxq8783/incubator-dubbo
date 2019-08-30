@@ -205,7 +205,7 @@ public class DubboProtocol extends AbstractProtocol {
             return invocation;
         }
     };
-
+    //单例类
     public DubboProtocol() {
         INSTANCE = this;
     }
@@ -283,9 +283,9 @@ public class DubboProtocol extends AbstractProtocol {
         URL url = invoker.getUrl();
 
         // export service.
-        String key = serviceKey(url);
+        String key = serviceKey(url);//根据服务分组、版本、接口和端口构造key
         DubboExporter<T> exporter = new DubboExporter<T>(invoker, key, exporterMap);
-        exporterMap.put(key, exporter);
+        exporterMap.put(key, exporter);//把exporter存储到单例dubboProtocol中
 
         //export an stub service for dispatching event
         Boolean isStubSupportEvent = url.getParameter(STUB_EVENT_KEY, DEFAULT_STUB_EVENT);
@@ -302,7 +302,7 @@ public class DubboProtocol extends AbstractProtocol {
                 stubServiceMethodsMap.put(url.getServiceKey(), stubServiceMethods);
             }
         }
-
+        //服务初次暴露会创建监听服务器
         openServer(url);
         optimizeSerialization(url);
 
@@ -346,6 +346,7 @@ public class DubboProtocol extends AbstractProtocol {
 
         ExchangeServer server;
         try {
+            //创建NettyServer并且初始化Handler
             server = Exchangers.bind(url, requestHandler);
         } catch (RemotingException e) {
             throw new RpcException("Fail to start server(url: " + url + ") " + e.getMessage(), e);
@@ -409,7 +410,7 @@ public class DubboProtocol extends AbstractProtocol {
 
         return invoker;
     }
-
+    //获取客户端
     private ExchangeClient[] getClients(URL url) {
         // whether to share connection
 
@@ -587,11 +588,12 @@ public class DubboProtocol extends AbstractProtocol {
 
         ExchangeClient client;
         try {
-            // connection should be lazy
+            // connection should be lazy 如果配置了lazy 则真是调用才会创建TCP连接
             if (url.getParameter(LAZY_CONNECT_KEY, false)) {
                 client = new LazyConnectExchangeClient(url, requestHandler);
 
             } else {
+                //立即与远程连接
                 client = Exchangers.connect(url, requestHandler);
             }
 

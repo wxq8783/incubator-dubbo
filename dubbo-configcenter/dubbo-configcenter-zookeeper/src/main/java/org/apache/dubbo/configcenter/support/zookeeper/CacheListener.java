@@ -76,7 +76,7 @@ public class CacheListener implements DataListener {
         return groupKey.substring(groupKey.indexOf(DOT_SEPARATOR) + 1);
     }
 
-
+    //收到订阅后的处理
     @Override
     public void dataChanged(String path, Object value, EventType eventType) {
         if (eventType == null) {

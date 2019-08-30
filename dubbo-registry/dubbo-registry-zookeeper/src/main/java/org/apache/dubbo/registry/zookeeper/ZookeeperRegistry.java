@@ -81,6 +81,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
         }
         this.root = group;
         zkClient = zookeeperTransporter.connect(url);
+        //监听 连接失败 重连
         zkClient.addStateListener(state -> {
             if (state == StateListener.RECONNECTED) {
                 try {
@@ -107,6 +108,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
         }
     }
 
+    //注册
     @Override
     public void doRegister(URL url) {
         try {
@@ -125,10 +127,11 @@ public class ZookeeperRegistry extends FailbackRegistry {
         }
     }
 
+    //订阅服务
     @Override
     public void doSubscribe(final URL url, final NotifyListener listener) {
         try {
-            if (ANY_VALUE.equals(url.getServiceInterface())) {
+            if (ANY_VALUE.equals(url.getServiceInterface())) {//订阅所有数据
                 String root = toRootPath();
                 ConcurrentMap<NotifyListener, ChildListener> listeners = zkListeners.get(url);
                 if (listeners == null) {
@@ -136,8 +139,8 @@ public class ZookeeperRegistry extends FailbackRegistry {
                     listeners = zkListeners.get(url);
                 }
                 ChildListener zkListener = listeners.get(listener);
-                if (zkListener == null) {
-                    listeners.putIfAbsent(listener, (parentPath, currentChilds) -> {
+                if (zkListener == null) {//说明是第一次
+                    listeners.putIfAbsent(listener, (parentPath, currentChilds) -> {//ChildListener.childChanged(String path, List<String> children)
                         for (String child : currentChilds) {
                             child = URL.decode(child);
                             if (!anyServices.contains(child)) {
@@ -169,10 +172,13 @@ public class ZookeeperRegistry extends FailbackRegistry {
                     }
                     ChildListener zkListener = listeners.get(listener);
                     if (zkListener == null) {
+                        //创建一个监听ChildListener
                         listeners.putIfAbsent(listener, (parentPath, currentChilds) -> ZookeeperRegistry.this.notify(url, listener, toUrlsWithEmpty(url, parentPath, currentChilds)));
                         zkListener = listeners.get(listener);
                     }
+                    //创建节点 dubbo/service/configurators
                     zkClient.create(path, false);
+                    //加入监听
                     List<String> children = zkClient.addChildListener(path, zkListener);
                     if (children != null) {
                         urls.addAll(toUrlsWithEmpty(url, path, children));
