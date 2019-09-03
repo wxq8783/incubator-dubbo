@@ -29,7 +29,7 @@ import java.lang.reflect.Method;
  */
 public class InvokerInvocationHandler implements InvocationHandler {
     private static final Logger logger = LoggerFactory.getLogger(InvokerInvocationHandler.class);
-    private final Invoker<?> invoker;
+    private final Invoker<?> invoker;//实际是MockClusterInvoker
 
     public InvokerInvocationHandler(Invoker<?> handler) {
         this.invoker = handler;
@@ -39,9 +39,11 @@ public class InvokerInvocationHandler implements InvocationHandler {
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         String methodName = method.getName();
         Class<?>[] parameterTypes = method.getParameterTypes();
+        // 拦截定义在 Object 类中的方法（未被子类重写），比如 wait/notify
         if (method.getDeclaringClass() == Object.class) {
             return method.invoke(invoker, args);
         }
+        // 如果 toString、hashCode 和 equals 等方法被子类重写了，这里也直接调用
         if ("toString".equals(methodName) && parameterTypes.length == 0) {
             return invoker.toString();
         }
@@ -51,7 +53,7 @@ public class InvokerInvocationHandler implements InvocationHandler {
         if ("equals".equals(methodName) && parameterTypes.length == 1) {
             return invoker.equals(args[0]);
         }
-
+        // 将 method 和 args 封装到 RpcInvocation 中，并执行后续的调用  MockClusterInvoker.invoke()
         return invoker.invoke(new RpcInvocation(method, args)).recreate();
     }
 }

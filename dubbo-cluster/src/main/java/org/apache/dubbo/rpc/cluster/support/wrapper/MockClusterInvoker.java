@@ -41,7 +41,7 @@ public class MockClusterInvoker<T> implements Invoker<T> {
 
     private final Directory<T> directory;
 
-    private final Invoker<T> invoker;
+    private final Invoker<T> invoker; //FailoverClusterInvoker
 
     public MockClusterInvoker(Directory<T> directory, Invoker<T> invoker) {
         this.directory = directory;
@@ -71,20 +71,25 @@ public class MockClusterInvoker<T> implements Invoker<T> {
     @Override
     public Result invoke(Invocation invocation) throws RpcException {
         Result result = null;
-
+        // 获取 mock 配置值
         String value = directory.getUrl().getMethodParameter(invocation.getMethodName(), MOCK_KEY, Boolean.FALSE.toString()).trim();
         if (value.length() == 0 || "false".equalsIgnoreCase(value)) {
             //no mock
+            // 无 mock 逻辑，直接调用其他 Invoker 对象的 invoke 方法，
+            // 比如 FailoverClusterInvoker
             result = this.invoker.invoke(invocation);
         } else if (value.startsWith("force")) {
             if (logger.isWarnEnabled()) {
                 logger.warn("force-mock: " + invocation.getMethodName() + " force-mock enabled , url : " + directory.getUrl());
             }
             //force:direct mock
+            // force:xxx 直接执行 mock 逻辑，不发起远程调用
             result = doMockInvoke(invocation, null);
         } else {
             //fail-mock
+            // fail:xxx 表示消费方对调用服务失败后，再执行 mock 逻辑，不抛出异常
             try {
+                // 调用其他 Invoker 对象的 invoke 方法
                 result = this.invoker.invoke(invocation);
 
                 //fix:#4585
@@ -93,6 +98,7 @@ public class MockClusterInvoker<T> implements Invoker<T> {
                     if(rpcException.isBiz()){
                         throw  rpcException;
                     }else {
+                        // 调用失败，执行 mock 逻辑
                         result = doMockInvoke(invocation, rpcException);
                     }
                 }

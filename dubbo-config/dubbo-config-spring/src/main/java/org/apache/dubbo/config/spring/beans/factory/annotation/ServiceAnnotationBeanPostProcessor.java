@@ -129,9 +129,8 @@ public class ServiceAnnotationBeanPostProcessor implements BeanDefinitionRegistr
      */
     private void registerServiceBeans(Set<String> packagesToScan, BeanDefinitionRegistry registry) {
 
-        DubboClassPathBeanDefinitionScanner scanner =
-                new DubboClassPathBeanDefinitionScanner(registry, environment, resourceLoader);
-
+        DubboClassPathBeanDefinitionScanner scanner =  new DubboClassPathBeanDefinitionScanner(registry, environment, resourceLoader);
+        //获取BeanNameGenerator  一般都是AnnotationBeanNameGenerator
         BeanNameGenerator beanNameGenerator = resolveBeanNameGenerator(registry);
 
         scanner.setBeanNameGenerator(beanNameGenerator);
@@ -157,7 +156,7 @@ public class ServiceAnnotationBeanPostProcessor implements BeanDefinitionRegistr
                     findServiceBeanDefinitionHolders(scanner, packageToScan, registry, beanNameGenerator);
 
             if (!CollectionUtils.isEmpty(beanDefinitionHolders)) {
-
+                //注册ServiceBean
                 for (BeanDefinitionHolder beanDefinitionHolder : beanDefinitionHolders) {
                     //注册ServiceBean定义 并做数据绑定和解析
                     registerServiceBean(beanDefinitionHolder, registry, scanner);
@@ -274,13 +273,15 @@ public class ServiceAnnotationBeanPostProcessor implements BeanDefinitionRegistr
         AnnotationAttributes serviceAnnotationAttributes = getAnnotationAttributes(service, false, false);
 
         Class<?> interfaceClass = resolveServiceInterfaceClass(serviceAnnotationAttributes, beanClass);
+        //获取接口的实现类  demoExampleImpl类
 
         String annotatedServiceBeanName = beanDefinitionHolder.getBeanName();
-
+        //重新定义一个BeanDefinition
         AbstractBeanDefinition serviceBeanDefinition =
                 buildServiceBeanDefinition(service, serviceAnnotationAttributes, interfaceClass, annotatedServiceBeanName);
 
         // ServiceBean Bean name
+       //判断beanName是否已经被注册
         String beanName = generateServiceBeanName(serviceAnnotationAttributes, interfaceClass);
 
         if (scanner.checkCandidate(beanName, serviceBeanDefinition)) { // check duplicated candidate bean
@@ -387,6 +388,7 @@ public class ServiceAnnotationBeanPostProcessor implements BeanDefinitionRegistr
 
         propertyValues.addPropertyValues(new AnnotationPropertyValuesAdapter(serviceAnnotation, environment, ignoreAttributeNames));
 
+        //注入属性
         // References "ref" property to annotated-@Service Bean
         addPropertyReference(builder, "ref", annotatedServiceBeanName);
         // Set interface
