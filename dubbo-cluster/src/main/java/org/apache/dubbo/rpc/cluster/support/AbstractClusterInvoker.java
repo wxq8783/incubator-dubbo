@@ -124,7 +124,8 @@ public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
             return null;
         }
         String methodName = invocation == null ? StringUtils.EMPTY : invocation.getMethodName();
-
+        //粘滞连接 用于有状态服务，尽可能让客户端总是向同一提供者发起调用，除非该提供者“挂了”，再链接另一台
+        //粘滞连接 将自动开启延迟连接，以减少长连接数
         boolean sticky = invokers.get(0).getUrl()
                 .getMethodParameter(methodName, CLUSTER_STICKY_KEY, DEFAULT_CLUSTER_STICKY);
 
@@ -162,6 +163,7 @@ public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
         if ((selected != null && selected.contains(invoker))
                 || (!invoker.isAvailable() && getUrl() != null && availablecheck)) {
             try {
+                //重新选择
                 Invoker<T> rInvoker = reselect(loadbalance, invocation, invokers, selected, availablecheck);
                 if (rInvoker != null) {
                     invoker = rInvoker;
@@ -185,7 +187,8 @@ public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
     /**
      * Reselect, use invokers not in `selected` first, if all invokers are in `selected`,
      * just pick an available one using loadbalance policy.
-     *
+     * 首先使用不在“选定”中的调用器，如果所有的调用器都在“选定”中，
+     * 只需使用loadbalance策略选择一个可用的
      * @param loadbalance    load balance policy
      * @param invocation     invocation
      * @param invokers       invoker candidates

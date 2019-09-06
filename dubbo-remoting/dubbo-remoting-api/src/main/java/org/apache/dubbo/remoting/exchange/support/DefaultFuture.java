@@ -63,13 +63,14 @@ public class DefaultFuture extends CompletableFuture<Object> {
     private final long start = System.currentTimeMillis();
     private volatile long sent;
     private Timeout timeoutCheckTask;
-
+    //创建DefaultFuture主要是用来保存当次请求对应的Request信息和Channel信息
     private DefaultFuture(Channel channel, Request request, int timeout) {
         this.channel = channel;
         this.request = request;
+        // 获取请求 id，这个 id 很重要
         this.id = request.getId();
         this.timeout = timeout > 0 ? timeout : channel.getUrl().getPositiveParameter(TIMEOUT_KEY, DEFAULT_TIMEOUT);
-        // put into waiting map.
+        // put into waiting map.   存储 <requestId, DefaultFuture> 映射关系到 FUTURES 中
         FUTURES.put(id, this);
         CHANNELS.put(id, channel);
     }
@@ -143,6 +144,7 @@ public class DefaultFuture extends CompletableFuture<Object> {
 
     public static void received(Channel channel, Response response, boolean timeout) {
         try {
+            //获取到DefaultFuture
             DefaultFuture future = FUTURES.remove(response.getId());
             if (future != null) {
                 Timeout t = future.timeoutCheckTask;
@@ -229,6 +231,9 @@ public class DefaultFuture extends CompletableFuture<Object> {
                 + " -> " + channel.getRemoteAddress();
     }
 
+    /**
+     * 定时任务 定时的扫描超时的请求
+     */
     private static class TimeoutCheckTask implements TimerTask {
 
         private final Long requestID;
@@ -243,7 +248,7 @@ public class DefaultFuture extends CompletableFuture<Object> {
             if (future == null || future.isDone()) {
                 return;
             }
-            // create exception response.
+            // create exception response.  如果超时了，构造一个超时Response并调用received方法
             Response timeoutResponse = new Response(future.getId());
             // set timeout status.
             timeoutResponse.setStatus(future.isSent() ? Response.SERVER_TIMEOUT : Response.CLIENT_TIMEOUT);

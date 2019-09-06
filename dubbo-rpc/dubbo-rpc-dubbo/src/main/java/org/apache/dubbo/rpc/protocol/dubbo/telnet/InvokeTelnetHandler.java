@@ -67,17 +67,17 @@ public class InvokeTelnetHandler implements TelnetHandler {
             return "Invalid parameters, format: service.method(args)";
         }
 
-        String method = message.substring(0, i).trim();
-        String args = message.substring(i + 1, message.length() - 1).trim();
+        String method = message.substring(0, i).trim();//提取调用方法(由接口名.方法名组成)
+        String args = message.substring(i + 1, message.length() - 1).trim();//提取调用方法方法参数值
         i = method.lastIndexOf(".");
         if (i >= 0) {
-            service = method.substring(0, i).trim();
-            method = method.substring(i + 1).trim();
+            service = method.substring(0, i).trim();//提取接口名称
+            method = method.substring(i + 1).trim();//提起方法名称
         }
 
         List<Object> list;
         try {
-            list = JSON.parseArray("[" + args + "]", Object.class);
+            list = JSON.parseArray("[" + args + "]", Object.class);//将参数JSON字符串转换为JSON对象
         } catch (Throwable t) {
             return "Invalid json argument, cause: " + t.getMessage();
         }

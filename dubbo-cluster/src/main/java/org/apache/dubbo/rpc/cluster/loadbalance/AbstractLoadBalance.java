@@ -35,6 +35,7 @@ import static org.apache.dubbo.rpc.cluster.Constants.WEIGHT_KEY;
  */
 public abstract class AbstractLoadBalance implements LoadBalance {
     /**
+     * 计算预热时候的权重 = (启动至今时间/给予的预热总时间)*权重
      * Calculate the weight according to the uptime proportion of warmup time
      * the new weight will be within 1(inclusive) to weight(inclusive)
      *
@@ -63,6 +64,7 @@ public abstract class AbstractLoadBalance implements LoadBalance {
 
 
     /**
+     *  获取当前Invoker的权重
      * Get the weight of the invoker's invocation which takes warmup time into account
      * if the uptime is within the warmup time, the weight will be reduce proportionally
      *
@@ -71,14 +73,15 @@ public abstract class AbstractLoadBalance implements LoadBalance {
      * @return weight
      */
     protected int getWeight(Invoker<?> invoker, Invocation invocation) {
+        //通过URL获取当前Invoker设置的权重
         int weight = invoker.getUrl().getMethodParameter(invocation.getMethodName(), WEIGHT_KEY, DEFAULT_WEIGHT);
         if (weight > 0) {
-            long timestamp = invoker.getUrl().getParameter(REMOTE_TIMESTAMP_KEY, 0L);
+            long timestamp = invoker.getUrl().getParameter(REMOTE_TIMESTAMP_KEY, 0L);//获取启动的时间戳
             if (timestamp > 0L) {
-                int uptime = (int) (System.currentTimeMillis() - timestamp);
-                int warmup = invoker.getUrl().getParameter(WARMUP_KEY, DEFAULT_WARMUP);
+                int uptime = (int) (System.currentTimeMillis() - timestamp);//求差值 得到已经预热了多久
+                int warmup = invoker.getUrl().getParameter(WARMUP_KEY, DEFAULT_WARMUP);//获取设置的总预热时间
                 if (uptime > 0 && uptime < warmup) {
-                    weight = calculateWarmupWeight(uptime, warmup, weight);
+                    weight = calculateWarmupWeight(uptime, warmup, weight);//计算最后的权重
                 }
             }
         }

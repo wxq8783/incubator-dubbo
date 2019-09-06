@@ -43,8 +43,8 @@ public class TelnetHandlerAdapter extends ChannelHandlerAdapter implements Telne
         if (message.length() > 0) {
             int i = message.indexOf(' ');
             if (i > 0) {
-                command = message.substring(0, i).trim();
-                message = message.substring(i + 1).trim();
+                command = message.substring(0, i).trim();//提取执行命令
+                message = message.substring(i + 1).trim();//提取命令后的所有字符串
             } else {
                 command = message;
                 message = "";
@@ -56,7 +56,7 @@ public class TelnetHandlerAdapter extends ChannelHandlerAdapter implements Telne
             if (extensionLoader.hasExtension(command)) {
                 if (commandEnabled(channel.getUrl(), command)) {
                     try {
-                        String result = extensionLoader.getExtension(command).telnet(channel, message);
+                        String result = extensionLoader.getExtension(command).telnet(channel, message);//交给具体扩展点执行
                         if (result == null) {
                             return null;
                         }

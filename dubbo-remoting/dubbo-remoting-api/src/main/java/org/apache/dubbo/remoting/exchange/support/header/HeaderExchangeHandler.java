@@ -59,7 +59,7 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
 
     static void handleResponse(Channel channel, Response response) throws RemotingException {
         if (response != null && !response.isHeartbeat()) {
-            DefaultFuture.received(channel, response);
+            DefaultFuture.received(channel, response);//唤醒阻塞的线程 并通知结果
         }
     }
 
@@ -86,7 +86,7 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
             if (data == null) {
                 msg = null;
             } else if (data instanceof Throwable) {
-                msg = StringUtils.toString((Throwable) data);
+                msg = StringUtils.toString((Throwable) data); //处理请求格式不正确(编解码)，并把异常转换成字符串返回
             } else {
                 msg = data.toString();
             }
@@ -99,14 +99,14 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
         // find handler by message class.
         Object msg = req.getData();
         try {
-            CompletionStage<Object> future = handler.reply(channel, msg);
+            CompletionStage<Object> future = handler.reply(channel, msg);//调用DubboProtocol#reply 触发方法的调用
             future.whenComplete((appResult, t) -> {
                 try {
                     if (t == null) {
                         res.setStatus(Response.OK);
                         res.setResult(appResult);
                     } else {
-                        res.setStatus(Response.SERVICE_ERROR);
+                        res.setStatus(Response.SERVICE_ERROR);//方法调用失败
                         res.setErrorMessage(StringUtils.toString(t));
                     }
                     channel.send(res);
@@ -178,31 +178,37 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
         }
     }
 
+    /**
+     * 请求响应handler实现
+     * @param channel channel.
+     * @param message message.
+     * @throws RemotingException
+     */
     @Override
     public void received(Channel channel, Object message) throws RemotingException {
-        channel.setAttribute(KEY_READ_TIMESTAMP, System.currentTimeMillis());
+        channel.setAttribute(KEY_READ_TIMESTAMP, System.currentTimeMillis());//更新事件的时间戳
         final ExchangeChannel exchangeChannel = HeaderExchangeChannel.getOrAddChannel(channel);
         try {
             if (message instanceof Request) {
                 // handle request.
                 Request request = (Request) message;
                 if (request.isEvent()) {
-                    handlerEvent(channel, request);
+                    handlerEvent(channel, request);//处理readonly事件 在channel中打标 用于dubbo优雅停机
                 } else {
                     if (request.isTwoWay()) {
-                        handleRequest(exchangeChannel, request);
+                        handleRequest(exchangeChannel, request);//处理方法调用并返回给客户端
                     } else {
                         handler.received(exchangeChannel, request.getData());
                     }
                 }
             } else if (message instanceof Response) {
-                handleResponse(channel, (Response) message);
+                handleResponse(channel, (Response) message);//接收响应
             } else if (message instanceof String) {
-                if (isClientSide(channel)) {
+                if (isClientSide(channel)) {//客户端不支持telnet调用
                     Exception e = new Exception("Dubbo client can not supported string message: " + message + " in channel: " + channel + ", url: " + channel.getUrl());
                     logger.error(e.getMessage(), e);
                 } else {
-                    String echo = handler.telnet(channel, (String) message);
+                    String echo = handler.telnet(channel, (String) message);//触发telnet调用 并返回
                     if (echo != null && echo.length() > 0) {
                         channel.send(echo);
                     }
