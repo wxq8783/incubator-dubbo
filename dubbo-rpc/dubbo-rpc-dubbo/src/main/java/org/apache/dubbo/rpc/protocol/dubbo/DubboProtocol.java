@@ -124,9 +124,10 @@ public class DubboProtocol extends AbstractProtocol {
             }
 
             Invocation inv = (Invocation) message;
-            Invoker<?> invoker = getInvoker(channel, inv);//查找Invocation关联Invoker
+            // 获取 Invoker 实例 查找Invocation关联Invoker
+            Invoker<?> invoker = getInvoker(channel, inv);
             // need to consider backward-compatibility if it's a callback
-            if (Boolean.TRUE.toString().equals(inv.getAttachments().get(IS_CALLBACK_SERVICE_INVOKE))) {
+            if (Boolean.TRUE.toString().equals(inv.getAttachments().get(IS_CALLBACK_SERVICE_INVOKE))) {//回调相关的
                 String methodsStr = invoker.getUrl().getParameters().get("methods");
                 boolean hasMethod = false;
                 if (methodsStr == null || !methodsStr.contains(",")) {
@@ -149,7 +150,8 @@ public class DubboProtocol extends AbstractProtocol {
                 }
             }
             RpcContext.getContext().setRemoteAddress(channel.getRemoteAddress());
-            Result result = invoker.invoke(inv);//调用业务方具体方法
+            //  通过 Invoker 调用具体的服务 AbstractProxyInvoker。invoker
+            Result result = invoker.invoke(inv);
             return result.completionFuture().thenApply(Function.identity());
         }
 
@@ -259,6 +261,8 @@ public class DubboProtocol extends AbstractProtocol {
         }
         //根据端口 、接口名、接口分组、接口版本 构造唯一的key
         String serviceKey = serviceKey(port, path, inv.getAttachments().get(VERSION_KEY), inv.getAttachments().get(GROUP_KEY));
+        // 从 exporterMap 查找与 serviceKey 相对应的 DubboExporter 对象，
+        // 服务导出过程中会将 <serviceKey, DubboExporter> 映射关系存储到 exporterMap 集合中
         DubboExporter<?> exporter = (DubboExporter<?>) exporterMap.get(serviceKey);//从HashMap中获取Export
 
         if (exporter == null) {

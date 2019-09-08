@@ -64,6 +64,7 @@ public class NettyClient extends AbstractClient {
     private Bootstrap bootstrap;
 
     /**
+     * 这里的 Channel 全限定名称为 org.jboss.netty.channel.Channel
      * current channel. Each successful invocation of {@link NettyClient#doConnect()} will
      * replace this with new channel and close old channel.
      * <b>volatile, please copy reference to use.</b>
@@ -195,6 +196,7 @@ public class NettyClient extends AbstractClient {
         if (c == null || !c.isActive()) {
             return null;
         }
+        // 获取一个 NettyChannel 类型对象
         return NettyChannel.getOrAddChannel(c, getUrl(), this);
     }
 

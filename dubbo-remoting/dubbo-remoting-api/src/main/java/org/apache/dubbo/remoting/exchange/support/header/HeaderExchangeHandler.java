@@ -80,6 +80,7 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
     void handleRequest(final ExchangeChannel channel, Request req) throws RemotingException {
         Response res = new Response(req.getId(), req.getVersion());
         if (req.isBroken()) {
+            // 检测请求是否合法，不合法则返回状态码为 BAD_REQUEST 的响应
             Object data = req.getData();
 
             String msg;
@@ -92,14 +93,15 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
             }
             res.setErrorMessage("Fail to decode request due to: " + msg);
             res.setStatus(Response.BAD_REQUEST);
-
+            // 将调用结果返回给服务消费端
             channel.send(res);
             return;
         }
-        // find handler by message class.
+        // find handler by message class. 获取 data 字段值，也就是 RpcInvocation 对象
         Object msg = req.getData();
         try {
-            CompletionStage<Object> future = handler.reply(channel, msg);//调用DubboProtocol#reply 触发方法的调用
+            //调用DubboProtocol#reply 触发方法的调用
+            CompletionStage<Object> future = handler.reply(channel, msg);
             future.whenComplete((appResult, t) -> {
                 try {
                     if (t == null) {
@@ -109,6 +111,7 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
                         res.setStatus(Response.SERVICE_ERROR);//方法调用失败
                         res.setErrorMessage(StringUtils.toString(t));
                     }
+                    // 将调用结果返回给服务消费端
                     channel.send(res);
                 } catch (RemotingException e) {
                     logger.warn("Send result to consumer failed, channel is " + channel + ", msg is " + e);
@@ -202,6 +205,7 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
                     }
                 }
             } else if (message instanceof Response) {
+                // 处理响应对象，服务消费方会执行此处逻辑
                 handleResponse(channel, (Response) message);//接收响应
             } else if (message instanceof String) {
                 if (isClientSide(channel)) {//客户端不支持telnet调用
