@@ -31,17 +31,20 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
+ * 权重轮询分为
+ *  普通权重轮询: 会造成某个节点突然被频繁选中，很容易造成某个节点流量暴增
+ *  平滑权重轮询:
  * Round robin load balance.
  */
 public class RoundRobinLoadBalance extends AbstractLoadBalance {
     public static final String NAME = "roundrobin";
     
     private static final int RECYCLE_PERIOD = 60000;
-    
+
     protected static class WeightedRoundRobin {
-        private int weight;
-        private AtomicLong current = new AtomicLong(0);
-        private long lastUpdate;
+        private int weight;//invoker设定的权重
+        private AtomicLong current = new AtomicLong(0);//考虑到并发场景下某个Invoker会被同时选中，表示该节点被所有线程选中的权重总和
+        private long lastUpdate;//最后一次更新的时间
         public int getWeight() {
             return weight;
         }
@@ -62,7 +65,7 @@ public class RoundRobinLoadBalance extends AbstractLoadBalance {
             this.lastUpdate = lastUpdate;
         }
     }
-
+    //权重缓存 key为接口+方法名  里面map的key为Invoker的URL
     private ConcurrentMap<String, ConcurrentMap<String, WeightedRoundRobin>> methodWeightMap = new ConcurrentHashMap<String, ConcurrentMap<String, WeightedRoundRobin>>();
     private AtomicBoolean updateLock = new AtomicBoolean();
     
@@ -83,7 +86,15 @@ public class RoundRobinLoadBalance extends AbstractLoadBalance {
         }
         return null;
     }
-    
+    /**
+     * 基本逻辑:
+     * 1、每个Invoker,让他的current = current+weight;
+     * 2、同时 累加每个Invoker的weight到totalWeight 即totalWeight = totalWeight + weight
+     * 3、遍历所有Invoker后，current值最大的就是本次选择的节点invoker
+     * 4、在把该invoker的current值减去totalWeight 即current = current - totalWeight
+     *
+     *
+     */
     @Override
     protected <T> Invoker<T> doSelect(List<Invoker<T>> invokers, URL url, Invocation invocation) {
         String key = invokers.get(0).getUrl().getServiceKey() + "." + invocation.getMethodName();
@@ -97,7 +108,7 @@ public class RoundRobinLoadBalance extends AbstractLoadBalance {
         long now = System.currentTimeMillis();
         Invoker<T> selectedInvoker = null;
         WeightedRoundRobin selectedWRR = null;
-        for (Invoker<T> invoker : invokers) {
+        for (Invoker<T> invoker : invokers) {//遍历所有invoker
             String identifyString = invoker.getUrl().toIdentityString();
             WeightedRoundRobin weightedRoundRobin = map.get(identifyString);
             int weight = getWeight(invoker, invocation);
@@ -120,10 +131,10 @@ public class RoundRobinLoadBalance extends AbstractLoadBalance {
             }
             totalWeight += weight;
         }
-        if (!updateLock.get() && invokers.size() != map.size()) {
+        if (!updateLock.get() && invokers.size() != map.size()) {//清除老旧数据 使用CAS锁
             if (updateLock.compareAndSet(false, true)) {
                 try {
-                    // copy -> modify -> update reference
+                    // copy -> modify -> update reference   使用copyOnWrite的思想
                     ConcurrentMap<String, WeightedRoundRobin> newMap = new ConcurrentHashMap<String, WeightedRoundRobin>();
                     newMap.putAll(map);
                     Iterator<Entry<String, WeightedRoundRobin>> it = newMap.entrySet().iterator();
@@ -140,6 +151,7 @@ public class RoundRobinLoadBalance extends AbstractLoadBalance {
             }
         }
         if (selectedInvoker != null) {
+            //当前的current减去总权重  这是平滑权重轮询的重要的一步
             selectedWRR.sel(totalWeight);
             return selectedInvoker;
         }

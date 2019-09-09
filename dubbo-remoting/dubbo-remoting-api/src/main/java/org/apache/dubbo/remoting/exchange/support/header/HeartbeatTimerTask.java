@@ -37,6 +37,14 @@ public class HeartbeatTimerTask extends AbstractTimerTask {
         this.heartbeat = heartbeat;
     }
 
+    /**
+     * Dubbo 采取的是双向心跳设计，即服务端会向客户端发送心跳，客户端也会向服务端发送心跳，
+     * 接收的一方更新 lastRead 字段，发送的一方更新 lastWrite 字段，超过心跳间隙的时间，便发送心跳请求给对端。
+     * 这里的 lastRead/lastWrite 同样会被同一个通道上的普通调用更新，通过更新这两个字段，实现了只在连接空闲时才会真正发送空闲报文的机制，
+     *
+     * !!!!!不仅仅心跳请求会更新 lastRead 和 lastWrite，普通请求也会。这对应了我们预备知识中的空闲检测机制
+     * @param channel
+     */
     @Override
     protected void doTask(Channel channel) {
         try {

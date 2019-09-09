@@ -183,7 +183,7 @@ public class HeaderExchangeClient implements ExchangeClient {
             AbstractTimerTask.ChannelProvider cp = () -> Collections.singletonList(HeaderExchangeClient.this);
             int heartbeat = getHeartbeat(url);
             long heartbeatTick = calculateLeastDuration(heartbeat);
-            this.heartBeatTimerTask = new HeartbeatTimerTask(cp, heartbeatTick, heartbeat);
+            this.heartBeatTimerTask = new HeartbeatTimerTask(cp, heartbeatTick, heartbeat);//用于定时发送心跳请求
             IDLE_CHECK_TIMER.newTimeout(heartBeatTimerTask, heartbeatTick, TimeUnit.MILLISECONDS);
         }
     }
@@ -193,7 +193,7 @@ public class HeaderExchangeClient implements ExchangeClient {
             AbstractTimerTask.ChannelProvider cp = () -> Collections.singletonList(HeaderExchangeClient.this);
             int idleTimeout = getIdleTimeout(url);
             long heartbeatTimeoutTick = calculateLeastDuration(idleTimeout);
-            this.reconnectTimerTask = new ReconnectTimerTask(cp, heartbeatTimeoutTick, idleTimeout);
+            this.reconnectTimerTask = new ReconnectTimerTask(cp, heartbeatTimeoutTick, idleTimeout);//用于心跳失败后处理重连，断链的逻辑
             IDLE_CHECK_TIMER.newTimeout(reconnectTimerTask, heartbeatTimeoutTick, TimeUnit.MILLISECONDS);
         }
     }

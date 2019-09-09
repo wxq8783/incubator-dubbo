@@ -35,7 +35,7 @@ import java.util.concurrent.ThreadLocalRandom;
 public class LeastActiveLoadBalance extends AbstractLoadBalance {
 
     public static final String NAME = "leastactive";
-
+    //要使用ActiveLimitFilter过滤器计算每个接口方法的活跃数  活跃数是指 调用前后计数差
     @Override
     protected <T> Invoker<T> doSelect(List<Invoker<T>> invokers, URL url, Invocation invocation) {
         // Number of invokers
@@ -59,14 +59,14 @@ public class LeastActiveLoadBalance extends AbstractLoadBalance {
         // Filter out all the least active invokers
         for (int i = 0; i < length; i++) {
             Invoker<T> invoker = invokers.get(i);
-            // Get the active number of the invoke
+            // Get the active number of the invoke 使用ActiveLimitFilter过滤器计算每个接口方法的活跃数
             int active = RpcStatus.getStatus(invoker.getUrl(), invocation.getMethodName()).getActive();
             // Get the weight of the invoke configuration. The default value is 100.
             int afterWarmup = getWeight(invoker, invocation);
             // save for later use
-            weights[i] = afterWarmup;
+            weights[i] = afterWarmup;  //以上 是获取invoker的活跃数、预热权重
             // If it is the first invoker or the active number of the invoker is less than the current least active number
-            if (leastActive == -1 || active < leastActive) {
+            if (leastActive == -1 || active < leastActive) {//第一次，或者发现有更新的活跃数
                 // Reset the active number of the current invoker to the least active number
                 leastActive = active;
                 // Reset the number of least active invokers
