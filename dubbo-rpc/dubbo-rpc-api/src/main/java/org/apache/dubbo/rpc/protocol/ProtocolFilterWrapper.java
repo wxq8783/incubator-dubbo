@@ -51,11 +51,12 @@ public class ProtocolFilterWrapper implements Protocol {
 
 
     private static <T> Invoker<T> buildInvokerChain(final Invoker<T> invoker, String key, String group) {
-        Invoker<T> last = invoker;
+        Invoker<T> last = invoker;//保存引用，后续用于把真正的调用者保存到过滤器链的最后
+        //获取所有的过滤器，包括有@Activate注解 默认启动的和用于在XML中自定义配置的
         List<Filter> filters = ExtensionLoader.getExtensionLoader(Filter.class).getActivateExtension(invoker.getUrl(), key, group);
 
         if (!filters.isEmpty()) {
-            for (int i = filters.size() - 1; i >= 0; i--) {
+            for (int i = filters.size() - 1; i >= 0; i--) {//过滤器倒叙遍历
                 final Filter filter = filters.get(i);
                 final Invoker<T> next = last;//会把真实的Invoker(服务对象ref)放到拦截器的末尾
                 last = new Invoker<T>() {//为每一个filter生成一个exporter,依次串联起来
@@ -79,6 +80,7 @@ public class ProtocolFilterWrapper implements Protocol {
                     public Result invoke(Invocation invocation) throws RpcException {
                         Result asyncResult;
                         try {
+                            //设置过滤器的下一个节点 不断循环形成过滤器链
                             asyncResult = filter.invoke(next, invocation);//每次调用都会传递给下一个拦截器
                         } catch (Exception e) {
                             // onError callback

@@ -376,6 +376,7 @@ public class DubboProtocol extends AbstractProtocol {
         logger.info("Optimizing the serialization process for Kryo, FST, etc...");
 
         try {
+            //使用当前线程的上下文类加载器
             Class clazz = Thread.currentThread().getContextClassLoader().loadClass(className);
             if (!SerializationOptimizer.class.isAssignableFrom(clazz)) {
                 throw new RpcException("The serialization optimizer " + className + " isn't an instance of " + SerializationOptimizer.class.getName());

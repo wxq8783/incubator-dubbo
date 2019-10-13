@@ -33,7 +33,7 @@ class StatItem {
     private LongAdder token;
 
     private int rate;
-
+    //基于令牌的限流 即一个时间段内指分配N个令牌 每个请求过来都会消耗一个令牌，耗完即止，后面再来的请求都会被拒绝
     StatItem(String name, int rate, long interval) {
         this.name = name;
         this.rate = rate;

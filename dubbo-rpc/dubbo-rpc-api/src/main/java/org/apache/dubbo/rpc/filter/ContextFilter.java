@@ -44,7 +44,8 @@ import static org.apache.dubbo.rpc.Constants.TOKEN_KEY;
 /**
  * ContextFilter set the provider RpcContext with invoker, invocation, local port it is using and host for
  * current execution thread.
- *
+ * 主要记录每个请求的调用上下文
+ * 统一在过滤器中处理请求的上下文信息，他为每一个请求维护一个RpcContext对象，该对象会维护两个InternalThreadLocal，分别记录local和server的上下文
  * @see RpcContext
  */
 @Activate(group = PROVIDER, order = -10000)

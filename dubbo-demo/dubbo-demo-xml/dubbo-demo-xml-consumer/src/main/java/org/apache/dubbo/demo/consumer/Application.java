@@ -16,16 +16,28 @@
  */
 package org.apache.dubbo.demo.consumer;
 
+import org.apache.dubbo.callback.CallbackListener;
+import org.apache.dubbo.callback.CallbackService;
 import org.apache.dubbo.demo.DemoService;
 
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
+import java.io.IOException;
+
 public class Application {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("spring/dubbo-consumer.xml");
         context.start();
-        DemoService demoService = context.getBean("demoService", DemoService.class);
-        String hello = demoService.sayHello("world");
-        System.out.println("result: " + hello);
+        CallbackService demoService = (CallbackService) context.getBean("callbackService");
+        demoService.addListener("foo.bar", new CallbackListener() {
+            @Override
+            public void changed(String msg) {
+                System.out.println("回调的时间："+msg);
+            }
+        });
+        System.in.read();
+
+//        String hello = demoService.sayHello("world");
+//        System.out.println("result: " + hello);
     }
 }
