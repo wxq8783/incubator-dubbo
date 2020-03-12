@@ -19,6 +19,9 @@
 
 package org.apache.dubbo.demo.consumer.comp;
 
+import cn.weidai.third.api.PersonApi;
+import cn.weidai.third.entity.MobileVerifyReq;
+import com.alibaba.fastjson.JSON;
 import org.apache.dubbo.config.annotation.Reference;
 import org.apache.dubbo.demo.DemoService;
 
@@ -27,10 +30,11 @@ import org.springframework.stereotype.Component;
 @Component("demoServiceComponent")
 public class DemoServiceComponent implements DemoService {
     @Reference
-    private DemoService demoService;
+    private PersonApi personApi;
 
     @Override
     public String sayHello(String name) {
-        return demoService.sayHello(name);
+        MobileVerifyReq req = new MobileVerifyReq();
+        return JSON.toJSONString(personApi.mobileVerify(req));
     }
 }

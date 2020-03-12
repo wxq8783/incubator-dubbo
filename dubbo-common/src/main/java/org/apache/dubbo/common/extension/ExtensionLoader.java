@@ -908,7 +908,7 @@ public class ExtensionLoader<T> {
         ClassLoader classLoader = findClassLoader();
         //获取编译器
         org.apache.dubbo.common.compiler.Compiler compiler = ExtensionLoader.getExtensionLoader(org.apache.dubbo.common.compiler.Compiler.class).getAdaptiveExtension();
-        //加载到calss类
+        //加载到class类
         return compiler.compile(code, classLoader);
     }
 

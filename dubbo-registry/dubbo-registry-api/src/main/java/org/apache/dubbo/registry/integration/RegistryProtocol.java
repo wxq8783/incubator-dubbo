@@ -419,11 +419,11 @@ public class RegistryProtocol implements Protocol {
             //注册消费信息到注册中心
             registry.register(directory.getRegisteredConsumerUrl());
         }
+        //建立路由规则链
         directory.buildRouterChain(subscribeUrl);
-        //订阅 服务提供者、路由、动态配置
-        directory.subscribe(subscribeUrl.addParameter(CATEGORY_KEY,
-                PROVIDERS_CATEGORY + "," + CONFIGURATORS_CATEGORY + "," + ROUTERS_CATEGORY));
-
+        //订阅 服务提供者地址  路由、动态配置
+        directory.subscribe(subscribeUrl.addParameter(CATEGORY_KEY, PROVIDERS_CATEGORY + "," + CONFIGURATORS_CATEGORY + "," + ROUTERS_CATEGORY));
+        //包装机器容错策略到invoker
         Invoker invoker = cluster.join(directory);
         ProviderConsumerRegTable.registerConsumer(invoker, url, subscribeUrl, directory);
         return invoker;

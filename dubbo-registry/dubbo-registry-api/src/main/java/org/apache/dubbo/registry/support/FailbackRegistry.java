@@ -292,10 +292,11 @@ public abstract class FailbackRegistry extends AbstractRegistry {
 
     @Override
     public void subscribe(URL url, NotifyListener listener) {
+        //添加回调的listener
         super.subscribe(url, listener);
         removeFailedSubscribed(url, listener);
         try {
-            // Sending a subscription request to the server side
+            // Sending a subscription request to the server side 从zookeeper获取服务提供者的地址列表等信息
             doSubscribe(url, listener);
         } catch (Exception e) {
             Throwable t = e;

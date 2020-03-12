@@ -130,8 +130,8 @@ public class ZookeeperRegistry extends FailbackRegistry {
     //订阅服务
     @Override
     public void doSubscribe(final URL url, final NotifyListener listener) {
-        try {
-            if (ANY_VALUE.equals(url.getServiceInterface())) {//订阅所有数据
+        try {//订阅所有数据
+            if (ANY_VALUE.equals(url.getServiceInterface())) {
                 String root = toRootPath();
                 ConcurrentMap<NotifyListener, ChildListener> listeners = zkListeners.get(url);
                 if (listeners == null) {
@@ -158,8 +158,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
                     for (String service : services) {
                         service = URL.decode(service);
                         anyServices.add(service);
-                        subscribe(url.setPath(service).addParameters(INTERFACE_KEY, service,
-                                Constants.CHECK_KEY, String.valueOf(false)), listener);
+                        subscribe(url.setPath(service).addParameters(INTERFACE_KEY, service, Constants.CHECK_KEY, String.valueOf(false)), listener);
                     }
                 }
             } else {

@@ -91,13 +91,13 @@ public class DubboInvoker<T> extends AbstractInvoker<T> {
             // isOneway 为 true，表示“单向”通信
             boolean isOneway = RpcUtils.isOneway(getUrl(), invocation);
             int timeout = getUrl().getMethodPositiveParameter(methodName, TIMEOUT_KEY, DEFAULT_TIMEOUT);
-            // 异步无返回值
+            // 单向通信
             if (isOneway) {
                 boolean isSent = getUrl().getMethodParameter(methodName, Constants.SENT_KEY, false);
                 currentClient.send(inv, isSent);
                 return AsyncRpcResult.newDefaultAsyncResult(invocation);
             } else {
-                //异步/或同步 有返回
+                //异步/或同步 有返回 同步逻辑future.get()操作在AsyncToSyncInvoker.invoke()中判断，在abstractProtocol.refer()中new AsyncToSyncInvoker<>(protocolBindingRefer(type, url));
                 AsyncRpcResult asyncRpcResult = new AsyncRpcResult(inv);
                 CompletableFuture<Object> responseFuture = currentClient.request(inv, timeout);
                 asyncRpcResult.subscribeTo(responseFuture);

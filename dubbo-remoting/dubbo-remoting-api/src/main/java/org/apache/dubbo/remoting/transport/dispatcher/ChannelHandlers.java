@@ -41,7 +41,7 @@ public class ChannelHandlers {
     static void setTestingChannelHandlers(ChannelHandlers instance) {
         INSTANCE = instance;
     }
-
+    //这里 获取到 dubbo的线程模型 默认是all  包含direct message execution connection
     protected ChannelHandler wrapInternal(ChannelHandler handler, URL url) {
         return new MultiMessageHandler(new HeartbeatHandler(ExtensionLoader.getExtensionLoader(Dispatcher.class)
                 .getAdaptiveExtension().dispatch(handler, url)));

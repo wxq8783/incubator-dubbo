@@ -33,9 +33,10 @@ import java.util.concurrent.atomic.AtomicLong;
 public class RpcStatus {
 
     private static final ConcurrentMap<String, RpcStatus> SERVICE_STATISTICS = new ConcurrentHashMap<String, RpcStatus>();
-
+    //缓存key为接口类 value为map
     private static final ConcurrentMap<String, ConcurrentMap<String, RpcStatus>> METHOD_STATISTICS = new ConcurrentHashMap<String, ConcurrentMap<String, RpcStatus>>();
     private final ConcurrentMap<String, Object> values = new ConcurrentHashMap<String, Object>();
+    //当前激活并发数
     private final AtomicInteger active = new AtomicInteger();
     private final AtomicLong total = new AtomicLong();
     private final AtomicInteger failed = new AtomicInteger();
@@ -49,6 +50,7 @@ public class RpcStatus {
     }
 
     /**
+     *
      * @param url
      * @return status
      */
@@ -71,6 +73,7 @@ public class RpcStatus {
     }
 
     /**
+     * 获取方法对应的RpcStatus
      * @param url
      * @param methodName
      * @return status
@@ -101,17 +104,20 @@ public class RpcStatus {
         }
     }
 
+    //递增方法对应的激活并发数
     public static void beginCount(URL url, String methodName) {
         beginCount(url, methodName, Integer.MAX_VALUE);
     }
 
     /**
+     * 递增方法对应的激活并发数
      * @param url
      */
     public static boolean beginCount(URL url, String methodName, int max) {
         max = (max <= 0) ? Integer.MAX_VALUE : max;
         RpcStatus appStatus = getStatus(url);
         RpcStatus methodStatus = getStatus(url, methodName);
+        //原子性的递增方法对应激活并发数 ， 若超过 返回false
         if (methodStatus.active.incrementAndGet() > max) {
             methodStatus.active.decrementAndGet();
             return false;
@@ -122,8 +128,9 @@ public class RpcStatus {
     }
 
     /**
+     * 原子性的递减方法对应的激活并发数
      * @param url
-     * @param elapsed
+     * @param elapsed (时间) 消逝，流逝;
      * @param succeeded
      */
     public static void endCount(URL url, String methodName, long elapsed, boolean succeeded) {

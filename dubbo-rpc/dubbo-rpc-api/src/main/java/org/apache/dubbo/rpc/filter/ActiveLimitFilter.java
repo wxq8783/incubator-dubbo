@@ -32,6 +32,7 @@ import static org.apache.dubbo.common.constants.CommonConstants.TIMEOUT_KEY;
 import static org.apache.dubbo.rpc.Constants.ACTIVES_KEY;
 
 /**
+ * 消费端的并发数控制
  * ActiveLimitFilter restrict the concurrent client invocation for a service or service's method from client side.
  * To use active limit filter, configured url with <b>actives</b> and provide valid >0 integer value.
  * <pre>
@@ -54,15 +55,21 @@ public class ActiveLimitFilter extends ListenableFilter {
 
     @Override
     public Result invoke(Invoker<?> invoker, Invocation invocation) throws RpcException {
+        //获取url
         URL url = invoker.getUrl();
+        //获取调用方法名
         String methodName = invocation.getMethodName();
+        //获取设置最大并发数 默认是0
         int max = invoker.getUrl().getMethodParameter(methodName, ACTIVES_KEY, 0);
+        //根据url和方法名 获取对应的状态对象
         final RpcStatus rpcStatus = RpcStatus.getStatus(invoker.getUrl(), invocation.getMethodName());
+        //判断是不是超过并发设置
         if (!RpcStatus.beginCount(url, methodName, max)) {
             long timeout = invoker.getUrl().getMethodParameter(invocation.getMethodName(), TIMEOUT_KEY, 0);
             long start = System.currentTimeMillis();
             long remain = timeout;
             synchronized (rpcStatus) {
+                //超过 并发现在则阻塞当前线程timeout时间 如果是服务端，则直接抛异常
                 while (!RpcStatus.beginCount(url, methodName, max)) {
                     try {
                         rpcStatus.wait(remain);
@@ -70,6 +77,7 @@ public class ActiveLimitFilter extends ListenableFilter {
                         // ignore
                     }
                     long elapsed = System.currentTimeMillis() - start;
+                    //超时了 还没有唤醒 抛出异常
                     remain = timeout - elapsed;
                     if (remain <= 0) {
                         throw new RpcException(RpcException.LIMIT_EXCEEDED_EXCEPTION,

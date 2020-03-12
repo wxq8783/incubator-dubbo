@@ -150,7 +150,7 @@ public class DubboProtocol extends AbstractProtocol {
                 }
             }
             RpcContext.getContext().setRemoteAddress(channel.getRemoteAddress());
-            //  通过 Invoker 调用具体的服务 AbstractProxyInvoker。invoker
+            //  通过 Invoker 调用具体的服务 AbstractProxyInvoker.invoker 执行invoker调用链
             Result result = invoker.invoke(inv);
             return result.completionFuture().thenApply(Function.identity());
         }
@@ -207,7 +207,7 @@ public class DubboProtocol extends AbstractProtocol {
             return invocation;
         }
     };
-    //单例类
+
     public DubboProtocol() {
         INSTANCE = this;
     }
@@ -319,6 +319,7 @@ public class DubboProtocol extends AbstractProtocol {
         //client can export a service which's only for server to invoke
         boolean isServer = url.getParameter(IS_SERVER_KEY, true);
         if (isServer) {
+            //serverMap 保证只有一个服务接口会被创建
             ExchangeServer server = serverMap.get(key);
             if (server == null) {
                 synchronized (this) {
@@ -417,22 +418,22 @@ public class DubboProtocol extends AbstractProtocol {
     }
     //获取客户端
     private ExchangeClient[] getClients(URL url) {
-        // whether to share connection
-
+        // whether to share connection 不同的服务是否共享链接
         boolean useShareConnect = false;
 
         int connections = url.getParameter(CONNECTIONS_KEY, 0);
         List<ReferenceCountExchangeClient> shareClients = null;
-        // if not configured, connection is shared, otherwise, one connection for one service
+        // if not configured, connection is shared, otherwise, one connection for one service 如果没有配置，默认链接是共享的 否则，每个服务单独有自己的链接
         if (connections == 0) {
             useShareConnect = true;
 
             /**
-             * The xml configuration should have a higher priority than properties.
+             * The xml configuration should have a higher priority than properties. xml优先高于属性配置
              */
             String shareConnectionsStr = url.getParameter(SHARE_CONNECTIONS_KEY, (String) null);
             connections = Integer.parseInt(StringUtils.isBlank(shareConnectionsStr) ? ConfigUtils.getProperty(SHARE_CONNECTIONS_KEY,
                     DEFAULT_SHARE_CONNECTIONS) : shareConnectionsStr);
+            //获取共享NettyClient
             shareClients = getSharedClient(url, connections);
         }
 

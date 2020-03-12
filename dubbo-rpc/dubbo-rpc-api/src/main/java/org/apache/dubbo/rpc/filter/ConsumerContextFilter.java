@@ -54,9 +54,11 @@ public class ConsumerContextFilter extends ListenableFilter {
             ((RpcInvocation) invocation).setInvoker(invoker);
         }
         try {
+            //具体发起RPC调用
             RpcContext.removeServerContext();
             return invoker.invoke(invocation);
         } finally {
+            //清楚附加属性
             RpcContext.removeContext();
         }
     }

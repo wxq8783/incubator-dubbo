@@ -32,7 +32,7 @@ public class MessageOnlyChannelHandler extends WrappedChannelHandler {
     public MessageOnlyChannelHandler(ChannelHandler handler, URL url) {
         super(handler, url);
     }
-
+    //只处理 请求 和 响应 的处理
     @Override
     public void received(Channel channel, Object message) throws RemotingException {
         ExecutorService executor = getExecutorService();

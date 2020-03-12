@@ -45,11 +45,11 @@ import static org.apache.dubbo.common.constants.CommonConstants.TIMEOUT_KEY;
 public class DefaultFuture extends CompletableFuture<Object> {
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultFuture.class);
-
+    //通道缓存
     private static final Map<Long, Channel> CHANNELS = new ConcurrentHashMap<>();
-
+    //future缓存
     private static final Map<Long, DefaultFuture> FUTURES = new ConcurrentHashMap<>();
-
+    //超时检查定时器
     public static final Timer TIME_OUT_TIMER = new HashedWheelTimer(
             new NamedThreadFactory("dubbo-future-timeout", true),
             30,
@@ -65,12 +65,15 @@ public class DefaultFuture extends CompletableFuture<Object> {
     private Timeout timeoutCheckTask;
     //创建DefaultFuture主要是用来保存当次请求对应的Request信息和Channel信息
     private DefaultFuture(Channel channel, Request request, int timeout) {
+        //保存通道信息
         this.channel = channel;
+        //保存 请求内容
         this.request = request;
         // 获取请求 id，这个 id 很重要
         this.id = request.getId();
+        //保存超时时间
         this.timeout = timeout > 0 ? timeout : channel.getUrl().getPositiveParameter(TIMEOUT_KEY, DEFAULT_TIMEOUT);
-        // put into waiting map.   存储 <requestId, DefaultFuture> 映射关系到 FUTURES 中
+        // put into waiting map. 根据请求ID 进行存储   存储 <requestId, DefaultFuture> 映射关系到 FUTURES 中
         FUTURES.put(id, this);
         CHANNELS.put(id, channel);
     }
@@ -161,6 +164,7 @@ public class DefaultFuture extends CompletableFuture<Object> {
                         + " -> " + channel.getRemoteAddress()));
             }
         } finally {
+            //删除 通信渠道
             CHANNELS.remove(response.getId());
         }
     }
